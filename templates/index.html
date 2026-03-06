@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voice Translator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:     #F6ECE3;
+      --white:  #FFFFFF;
+      --black:  #000000;
+      --mid:    #B7A7A9;
+      --brown:  #91766E;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--black);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px 60px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    h1 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--black);
+      margin-bottom: 4px;
+    }
+
+    p.sub {
+      font-size: .85rem;
+      color: var(--brown);
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: 10px;
+      padding: 20px;
+      border: 1px solid var(--mid);
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    label {
+      font-size: .82rem;
+      color: var(--brown);
+      white-space: nowrap;
+    }
+
+    select {
+      flex: 1;
+      min-width: 160px;
+      padding: 9px 12px;
+      border: 1px solid var(--mid);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--black);
+      font-family: 'Inter', sans-serif;
+      font-size: .9rem;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='6'%3E%3Cpath d='M1 1l4.5 4L10 1' stroke='%2391766E' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+    }
+    select:focus { outline: none; border-color: var(--brown); }
+    select:disabled { opacity: .5; }
+
+    .btns {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 11px;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-size: .88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      border: none;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+
+    .btn-start { background: var(--black); color: var(--white); }
+    .btn-stop  { background: transparent; border: 1.5px solid var(--brown); color: var(--brown); }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--white);
+      border: 1px solid var(--mid);
+      border-radius: 10px;
+      font-size: .82rem;
+      color: var(--brown);
+    }
+
+    .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--mid);
+      flex-shrink: 0;
+    }
+    .dot.active {
+      background: var(--brown);
+      animation: blink 1.2s ease-in-out infinite;
+    }
+    .dot.error { background: #c0392b; }
+    @keyframes blink {
+      0%,100% { opacity: 1; }
+      50%      { opacity: .3; }
+    }
+
+    .panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 500px) { .panels { grid-template-columns: 1fr; } }
+
+    .panel-title {
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--brown);
+      margin-bottom: 8px;
+    }
+
+    .english-label {
+      font-weight: 700;
+      color: var(--brown);
+      background: #F5E6D3;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border-left: 3px solid var(--brown);
+    }
+
+    .box {
+      min-height: 110px;
+      background: var(--bg);
+      border: 1px solid var(--mid);
+      border-radius: 8px;
+      padding: 14px;
+      font-size: .9rem;
+      line-height: 1.6;
+      color: var(--black);
+      word-break: break-word;
+      transition: border-color .25s;
+    }
+    .box.flash { border-color: var(--brown); }
+    .placeholder { color: var(--mid); }
+
+    .history-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .history-top span {
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--brown);
+    }
+    .clear-btn {
+      font-size: .78rem;
+      color: var(--mid);
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color .15s;
+    }
+    .clear-btn:hover { color: var(--brown); }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+    .history-list::-webkit-scrollbar { width: 3px; }
+    .history-list::-webkit-scrollbar-thumb { background: var(--mid); border-radius: 4px; }
+
+    .h-item {
+      background: var(--bg);
+      border: 1px solid var(--mid);
+      border-radius: 8px;
+      padding: 11px 14px;
+      animation: in .2s ease;
+    }
+    @keyframes in {
+      from { opacity: 0; transform: translateY(-5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .h-lang  { font-size: .72rem; color: var(--mid); margin-bottom: 3px; }
+    .h-orig  { font-size: .85rem; color: var(--black); margin-bottom: 2px; }
+    .h-trans { font-size: .85rem; color: var(--brown); }
+
+    .empty {
+      text-align: center;
+      font-size: .82rem;
+      color: var(--mid);
+      padding: 24px 0;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div>
+    <h1>Voice Translator</h1>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <label for="langSelect">Language</label>
+      <select id="langSelect">
+        {% for lang in languages %}
+        <option value="{{ lang }}">{{ lang }}</option>
+        {% endfor %}
+      </select>
+      <label class="english-label">→ English</label>
+    </div>
+    <div class="btns">
+      <button class="btn btn-start" id="startBtn" onclick="startListening()">Start</button>
+      <button class="btn btn-stop"  id="stopBtn"  onclick="stopListening()" disabled>Stop</button>
+    </div>
+  </div>
+
+  <div class="panels">
+    <div class="card" style="padding:16px">
+      <div class="panel-title">You said</div>
+      <div class="box" id="speechBox"><span class="placeholder">Waiting for speech…</span></div>
+    </div>
+    <div class="card" style="padding:16px">
+      <div class="panel-title">Translation</div>
+      <div class="box" id="translationBox"><span class="placeholder">Translation appears here…</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="history-top">
+      <span>History</span>
+      <button class="clear-btn" onclick="clearHistory()">Clear</button>
+    </div>
+    <div class="history-list" id="historyList">
+      <div class="empty">No translations yet.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let evtSource = null;
+  let currentLang = '';
+  let history = [];
+
+  function setStatus(msg, state = 'idle') {
+    document.getElementById('statusText').textContent = msg;
+    const dot = document.getElementById('dot');
+    dot.className = 'dot' + (state === 'active' ? ' active' : state === 'error' ? ' error' : '');
+  }
+
+  function flash(el) {
+    el.classList.add('flash');
+    setTimeout(() => el.classList.remove('flash'), 500);
+  }
+
+  async function startListening() {
+    const lang = document.getElementById('langSelect').value;
+    currentLang = lang;
+
+    const res = await fetch('/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ language: lang })
+    });
+    if (!res.ok) { setStatus('Failed to start.', 'error'); return; }
+
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('stopBtn').disabled = false;
+    document.getElementById('langSelect').disabled = true;
+
+    setStatus('Starting…', 'active');
+    document.getElementById('speechBox').innerHTML = '<span class="placeholder">Waiting…</span>';
+    document.getElementById('translationBox').innerHTML = '<span class="placeholder">Waiting…</span>';
+
+    if (evtSource) evtSource.close();
+    evtSource = new EventSource('/events');
+    evtSource.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      if (data.type === 'ping') return;
+
+      if (data.type === 'status') {
+        setStatus(data.message, 'active');
+      } else if (data.type === 'recognised') {
+        const box = document.getElementById('speechBox');
+        box.textContent = data.text;
+        flash(box);
+        setStatus('Translating…', 'active');
+      } else if (data.type === 'translated') {
+        const box = document.getElementById('translationBox');
+        box.textContent = data.text;
+        flash(box);
+        setStatus('Listening…', 'active');
+        addHistory(currentLang, document.getElementById('speechBox').textContent, data.text);
+      } else if (data.type === 'error') {
+        setStatus('Error: ' + data.message, 'error');
+      }
+    };
+  }
+
+  async function stopListening() {
+    await fetch('/stop', { method: 'POST' });
+    if (evtSource) { evtSource.close(); evtSource = null; }
+    document.getElementById('startBtn').disabled = false;
+    document.getElementById('stopBtn').disabled = true;
+    document.getElementById('langSelect').disabled = false;
+    setStatus('Stopped.', 'idle');
+  }
+
+  function addHistory(lang, original, translated) {
+    history.unshift({ lang, original, translated });
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('historyList');
+    if (history.length === 0) {
+      list.innerHTML = '<div class="empty">No translations yet.</div>';
+      return;
+    }
+    list.innerHTML = history.map(h => `
+      <div class="h-item">
+        <div class="h-lang">${h.lang} → English</div>
+        <div class="h-orig">${h.original}</div>
+        <div class="h-trans">${h.translated}</div>
+      </div>
+    `).join('');
+  }
+
+  function clearHistory() {
+    history = [];
+    renderHistory();
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+flask>=3.0
+speechrecognition>=3.10
+deep-translator>=1.11
+pyaudio>=0.2.14
